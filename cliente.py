@@ -15,8 +15,8 @@ class Cliente(object):
         self.port = port
 
     def start(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((self.host, self.port))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.host, int(self.port)))
 
     def menu(self):
         """
@@ -28,16 +28,17 @@ class Cliente(object):
         print('0) EXIT')
         op = -1
 
-        while op == -1:
-            try:
-                op = int(input(': '))
-                if op == 1:
-                    self.valida('GET', input('URL: http://'))
-                    break
-                else:
-                    print('Opción no valida')
-            except ValueError:
+        # while op == -1:
+        try:
+            op = int(input(': '))
+            logging.debug(op)
+            if op == 1:
+                self.valida('GET', input('URL: http://'))
+                # break
+            else:
                 print('Opción no valida')
+        except ValueError:
+            print('Opción no valida')
 
     def valida(self, method, url):
         """
@@ -46,14 +47,17 @@ class Cliente(object):
 
         logging.debug(
             'sending request, Method: %s, URL: %s', method, url)
-        self.host = url[:url.index('/')]
         if url.find(':') != -1:
             self.port = url[url.find(':')+1:url.index('/')]
+            self.host = url[:url.index(':')]
+        else:
+            self.host = url[:url.index('/')]
+
         self.resource = url[url.index('/'):]
         logging.debug('HOST: %s', self.host)
         logging.debug('PORT: %s', self.port)
         try:
-            # self.start()
+            self.start()
             self.formato(method)
         except ConnectionRefusedError:
             print('Imposible conectar al servidor')
@@ -72,8 +76,10 @@ class Cliente(object):
         Envía el mensaje al servidor.
         """
 
-        if self.sock:
-            self.sock.send(msg)
+        # if self.sock:
+        self.sock.send(msg)
+        response = self.sock.recv(1024).decode()
+        logging.debug(response)
 
 cliente = Cliente()
 cliente.menu()
