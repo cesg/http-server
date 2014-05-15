@@ -2,6 +2,9 @@ from threading import Thread
 import logging
 import datetime
 from request import Request
+from htmlFile import HTMLFile
+
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 
 class ClientThread(Thread):
@@ -23,17 +26,25 @@ class ClientThread(Thread):
             logging.debug(
                 'Request Method: %s, URL: %s', request.request, request.url)
             if request.request == 'GET':
-                pass
+                response = self.peticionGet(request.url)
+                self.sc.send(response.encode())
             elif request.request == 'POST':
                 pass
 
-            self.sc.send('HTTP/1.1 200 OK\n'.encode())
-            self.sc.send(
-                'Content-Type: text/html\n''Content-Type: text/html\n'
-                .encode())
-            self.sc.send('\n'.encode())
-            self.sc.send('Hola mundo'.encode())
         self.sc.close()
+
+    def peticionGet(self, url):
+
+        f = HTMLFile(url[1:])
+        if f.valida():
+            response = 'HTTP/1.1 200 OK\n'
+            response += 'Content-Type: text/html\n'
+            response += '\n'
+            response += f.leer()
+            return response
+        else:
+            logging.error(f.error)
+            return 'HTTP/1.1 404 OK\n'
 
     def printConsole(self, mensaje):
         """
